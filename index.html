@@ -590,7 +590,8 @@
             document.getElementById('u-name').innerText = currentUser.first_name;
             if(currentUser.photo_url) document.getElementById('u-avatar').src = currentUser.photo_url;
 
-            const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
+            // টেলিগ্রাম WebApp থেকে অথবা URL থেকে start_param সঠিকভাবে ধরার ব্যবস্থা
+            const startParam = (tg.initDataUnsafe && tg.initDataUnsafe.start_param) || getUrlParameter('start');
 
             generateReferralLink();
             listenSettings();
@@ -650,21 +651,24 @@
 
             userRef.once('value', snapshot => {
                 if (!snapshot.exists()) {
+                    let validReferrer = (referredBy && String(referredBy) !== String(currentUser.id)) ? referredBy : null;
+
                     let userData = {
                         id: currentUser.id,
                         name: currentUser.first_name,
                         photo_url: currentUser.photo_url || '',
                         balance: 0.00,
                         isBanned: false,
-                        referredBy: (referredBy && String(referredBy) !== String(currentUser.id)) ? referredBy : null,
+                        referredBy: validReferrer,
                         referralsCount: 0,
                         referralCommission: 0.00
                     };
 
                     userRef.set(userData);
 
-                    if (userData.referredBy) {
-                        const referrerRef = db.ref('users/' + userData.referredBy);
+                    // যদি রেফারার আইডি থাকে, তবে সরাসরি একবারই কাউন্ট ও বোনাস যোগ হবে
+                    if (validReferrer) {
+                        const referrerRef = db.ref('users/' + validReferrer);
                         referrerRef.transaction(user => {
                             if (user) {
                                 user.referralsCount = (user.referralsCount || 0) + 1;
@@ -810,12 +814,12 @@
         }
 
         function copyReferralLink() {
-            const copyText = document.getElementById("ref-link");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
+            const copyTest = document.getElementById("ref-link");
+            copyTest.select();
+            copyTest.setSelectionRange(0, 99999);
 
             try {
-                navigator.clipboard.writeText(copyText.value);
+                navigator.clipboard.writeText(copyTest.value);
             } catch (e) {
                 document.execCommand("copy");
             }
