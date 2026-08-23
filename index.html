@@ -285,41 +285,55 @@
             background: linear-gradient(180deg, #1060C8 0%, #083C7D 100%);
         }
 
-        /* Modal Overlay */
+        /* Blurred Overlay & Glassmorphism Design */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             z-index: 10000;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            animation: fadeIn 0.2s ease-in-out;
+            animation: popupFade 0.25s ease-out;
+        }
+
+        @keyframes popupFade {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .modal-card {
             background: #ffffff;
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 360px;
+            border-radius: 24px;
+            padding: 25px;
+            max-width: 340px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 35px rgba(24, 119, 242, 0.2);
+            border: 2px solid #E7F3FF;
             position: relative;
         }
 
         .modal-icon {
-            width: 60px;
-            height: 60px;
-            background: #E7F3FF;
-            color: var(--primary);
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #1877F2, #0D5CB9);
+            color: #ffffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 30px;
             margin: 0 auto 15px auto;
+            box-shadow: 0 8px 18px rgba(24, 119, 242, 0.35);
+        }
+
+        .modal-icon.error {
+            background: linear-gradient(135deg, #E41E3F, #A7001E);
+            box-shadow: 0 8px 18px rgba(228, 30, 63, 0.35);
         }
 
         #banned-screen {
@@ -368,7 +382,7 @@
         </button>
     </div>
 
-    <!-- Notice Modal Popup -->
+    <!-- General Notice Modal Popup -->
     <div id="notice-modal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-icon">
@@ -379,6 +393,18 @@
                 সঠিক তথ্য দিয়ে ফেসবুক আইডি সাবমিট করুন। প্রতি আইডির ফলোয়ার অনুযায়ী সাথে সাথে ব্যালেন্স জমা হবে। ৫টি রেফার সম্পন্ন করে যেকোনো সময় পেমেন্ট নিতে পারবেন।
             </p>
             <button class="btn-3d" onclick="closeNoticeModal()">ঠিক আছে</button>
+        </div>
+    </div>
+
+    <!-- Premium Blue Custom Popup Alert -->
+    <div id="custom-popup" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon" id="popup-icon">
+                <i class="fa-solid fa-circle-check" id="popup-icon-i"></i>
+            </div>
+            <h3 id="popup-title" style="color: var(--primary); margin-bottom: 10px; font-size: 18px;">সফল হয়েছে!</h3>
+            <p id="popup-message" style="font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 20px;">আপনার বার্তা মেসেজ এখানে দেখাবে।</p>
+            <button class="btn-3d" onclick="closeCustomPopup()">ঠিক আছে</button>
         </div>
     </div>
 
@@ -459,7 +485,7 @@
                 <div style="margin: 20px 0;">
                     <div class="form-group">
                         <label>আপনার রেফার লিঙ্ক:</label>
-                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold; color: var(--primary);" value="জেনারেট হচ্ছে...">
+                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: 700; color: #222222; background-color: #E7F3FF; border-color: #B2D5FF;" value="জেনারেট হচ্ছে...">
                     </div>
                     <button class="btn-3d" onclick="copyReferralLink()">লিঙ্ক কপি করুন</button>
                 </div>
@@ -527,10 +553,8 @@
     </div>
 
     <script>
-        // ১. আপনার বটের সঠিক ইউজারনেম সেটিং
-        const BOT_USERNAME = "FBSALE11_bot"; // @ ছাড়া
+        const BOT_USERNAME = "FBSALE11_bot";
 
-        // FIREBASE INITIALIZATION
         const firebaseConfig = {
             apiKey: "AIzaSyDd2_UqUgeT_UBK1MoYB9kk9RHoj3d80GQ",
             authDomain: "message-patal.firebaseapp.com",
@@ -544,12 +568,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Telegram WebApp Setup
         const tg = window.Telegram.WebApp;
         tg.expand();
 
         let currentUser = {
-            id: "8931655832", // ডিফল্ট আইডি
+            id: "8931655832",
             first_name: "Demo User",
             photo_url: "https://via.placeholder.com/150"
         };
@@ -565,13 +588,9 @@
             document.getElementById('u-name').innerText = currentUser.first_name;
             if(currentUser.photo_url) document.getElementById('u-avatar').src = currentUser.photo_url;
 
-            // রেফারেল স্টার্ট প্যারামিটার চেক
             const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
 
-            // ১. রেফার লিংক জেনারেট
             generateReferralLink();
-
-            // ২. ইউজার সিঙ্ক ও ইনস্ট্যান্ট রেফার বোনাস দেওয়া
             syncUserData(startParam);
 
             listenSettings();
@@ -579,7 +598,31 @@
             loadWithdrawHistory();
         };
 
-        // --- রেফারেল লিংক জেনারেটর ---
+        function showCustomPopup(title, message, isSuccess = true, iconClass = "") {
+            const popup = document.getElementById('custom-popup');
+            const iconBox = document.getElementById('popup-icon');
+            const iconI = document.getElementById('popup-icon-i');
+
+            document.getElementById('popup-title').innerText = title;
+            document.getElementById('popup-message').innerText = message;
+
+            if (isSuccess) {
+                iconBox.classList.remove('error');
+                iconI.className = iconClass || "fa-solid fa-circle-check";
+                document.getElementById('popup-title').style.color = "var(--primary)";
+            } else {
+                iconBox.classList.add('error');
+                iconI.className = iconClass || "fa-solid fa-circle-xmark";
+                document.getElementById('popup-title').style.color = "var(--danger)";
+            }
+
+            popup.style.display = 'flex';
+        }
+
+        function closeCustomPopup() {
+            document.getElementById('custom-popup').style.display = 'none';
+        }
+
         function generateReferralLink() {
             const referLink = `https://t.me/${BOT_USERNAME}?start=${currentUser.id}`;
             document.getElementById('ref-link').value = referLink;
@@ -600,7 +643,6 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
 
-        // --- ইনস্ট্যান্ট রেফার বোনাস এবং একাউন্ট সিঙ্ক লজিক ---
         function syncUserData(referredBy) {
             const userRef = db.ref('users/' + currentUser.id);
 
@@ -617,10 +659,8 @@
                         referralCommission: 0.00
                     };
 
-                    // নতুন ইউজার সেভ
                     userRef.set(userData);
 
-                    // রেফারারকে বোনাস এবং রেফার কাউন্ট দেওয়া
                     if (userData.referredBy) {
                         const referrerRef = db.ref('users/' + userData.referredBy);
                         referrerRef.transaction(user => {
@@ -635,7 +675,6 @@
                 }
             });
 
-            // রিয়েল-টাইম ব্যালেন্স ও রেফার কাউন্ট লিসেনার
             userRef.on('value', snapshot => {
                 const data = snapshot.val();
                 if (data) {
@@ -678,7 +717,7 @@
             const followers = parseInt(document.getElementById('fb-followers').value);
 
             if(!credential || !name || !pass || !link || !followers || followers <= 0) {
-                alert('অনুগ্রহ করে সমস্ত সঠিক তথ্য পূরণ করুন!');
+                showCustomPopup("ভুল তথ্য!", "অনুগ্রহ করে সকল ঘর সঠিকভাবে পূরণ করুন।", false, "fa-solid fa-triangle-exclamation");
                 return;
             }
 
@@ -696,7 +735,8 @@
                 timestamp: Date.now()
             });
 
-            alert('রিকোয়েস্ট সফলভাবে জমা নেওয়া হয়েছে! এডমিন যাচাই করে এপ্রুভ করলে ব্যালেন্সে টাকা যোগ হবে।');
+            showCustomPopup("সাবমিট সফল!", "আইডি রিকোয়েস্ট জমা নেওয়া হয়েছে। এডমিন চেক করে ব্যালেন্সে টাকা যোগ করে দেবে।", true, "fa-solid fa-paper-plane");
+
             document.getElementById('fb-credential').value = '';
             document.getElementById('fb-name').value = '';
             document.getElementById('fb-pass').value = '';
@@ -760,7 +800,6 @@
             });
         }
 
-        // কপি বাটন ফাংশন
         function copyReferralLink() {
             const copyText = document.getElementById("ref-link");
             copyText.select();
@@ -768,11 +807,10 @@
 
             try {
                 navigator.clipboard.writeText(copyText.value);
-                alert("রেফারেল লিঙ্ক কপি করা হয়েছে:\n" + copyText.value);
             } catch (e) {
                 document.execCommand("copy");
-                alert("রেফারেল লিঙ্ক কপি করা হয়েছে:\n" + copyText.value);
             }
+            showCustomPopup("কপি হয়েছে!", "আপনার রেফারেল লিঙ্ক সফলভাবে কপি করা হয়েছে।", true, "fa-solid fa-copy");
         }
 
         function requestWithdraw() {
@@ -781,17 +819,17 @@
             const amount = parseFloat(document.getElementById('w-amount').value);
 
             if(!number || !amount) {
-                alert('সকল তথ্য পূরণ করুন।');
+                showCustomPopup("অসম্পূর্ণ তথ্য!", "সকল তথ্য সঠিকভাবে পূরণ করুন।", false, "fa-solid fa-circle-exclamation");
                 return;
             }
 
             if(userReferralsCount < 5) {
-                alert(`উইথড্র করার জন্য আপনার অন্তত ৫টি রেফার প্রয়োজন! (বর্তমান রেফার: ${userReferralsCount}টি)`);
+                showCustomPopup("রেফার লিমিট!", `উইথড্র করার জন্য আপনার অন্তত ৫টি রেফার প্রয়োজন! (বর্তমান রেফার: ${userReferralsCount}টি)`, false, "fa-solid fa-user-plus");
                 return;
             }
 
             if(amount < minWithdrawLimit) {
-                alert(`সর্বনিম্ন উইথড্র লিমিট ৳ ${minWithdrawLimit}`);
+                showCustomPopup("উইথড্র লিমিট!", `সর্বনিম্ন উইথড্র লিমিট ৳ ${minWithdrawLimit}`, false, "fa-solid fa-hand-holding-dollar");
                 return;
             }
 
@@ -799,7 +837,7 @@
             userRef.once('value', snapshot => {
                 const currentBalance = snapshot.val() || 0;
                 if(currentBalance < amount) {
-                    alert('আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নেই!');
+                    showCustomPopup("পর্যাপ্ত ব্যালেন্স নেই!", "আপনার একাউন্টে প্রয়োজনীয় ব্যালেন্স নেই।", false, "fa-solid fa-wallet");
                 } else {
                     userRef.set(currentBalance - amount);
 
@@ -813,7 +851,8 @@
                         status: 'pending',
                         timestamp: Date.now()
                     });
-                    alert('উইথড্র রিকোয়েস্ট সফলভাবে জমা নেওয়া হয়েছে!');
+
+                    showCustomPopup("উইথড্র সফল!", "আপনার উইথড্র রিকোয়েস্ট সফলভাবে জমা নেওয়া হয়েছে!", true, "fa-solid fa-circle-check");
                     document.getElementById('w-number').value = '';
                     document.getElementById('w-amount').value = '';
                 }
