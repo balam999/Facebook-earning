@@ -32,7 +32,6 @@
             padding: 0;
             font-family: 'Roboto', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            /* Unwanted selection blocked */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -101,7 +100,6 @@
             box-shadow: 0 0 8px #00FF66;
         }
 
-        /* Notice Bell Icon Button on top right */
         .notice-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.4);
@@ -287,7 +285,7 @@
             background: linear-gradient(180deg, #1060C8 0%, #083C7D 100%);
         }
 
-        /* Modal Overlay for Notice Popup */
+        /* Modal Overlay */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -324,7 +322,6 @@
             margin: 0 auto 15px auto;
         }
 
-        /* Banned Screen */
         #banned-screen {
             display: none;
             position: fixed;
@@ -338,7 +335,6 @@
             text-align: center;
         }
 
-        /* History Table Badge */
         .badge {
             padding: 4px 8px;
             border-radius: 6px;
@@ -366,7 +362,6 @@
             </div>
         </div>
 
-        <!-- Top Right Notice Bell Icon Button -->
         <button class="notice-btn" onclick="openNoticeModal()" title="Notice">
             <i class="fa-solid fa-bell"></i>
             <span class="notice-badge-dot"></span>
@@ -438,7 +433,7 @@
 
                 <div style="background: #E7F3FF; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
                     <p style="font-size: 13px; color: var(--primary-dark); font-weight: bold;">
-                        সম্ভাব্য আয়: ৳ <span id="estimated-earn">0</span>
+                        সম্ভাবনা আয়: ৳ <span id="estimated-earn">0</span>
                     </p>
                 </div>
 
@@ -464,7 +459,7 @@
                 <div style="margin: 20px 0;">
                     <div class="form-group">
                         <label>আপনার অটো-জেনারেটেড রেফার লিঙ্ক:</label>
-                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold;" value="জেনারেট হচ্ছে...">
+                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold; color: var(--primary);" value="জেনারেট হচ্ছে...">
                     </div>
                     <button class="btn-3d" onclick="copyReferralLink()">লিঙ্ক কপি করুন</button>
                 </div>
@@ -551,7 +546,7 @@
         tg.expand();
 
         let currentUser = {
-            id: "12345678", // Fallback Default ID
+            id: "8931655832", // Fallback Default Chat ID
             first_name: "Demo User",
             photo_url: "https://via.placeholder.com/150"
         };
@@ -562,7 +557,7 @@
 
         let minWithdrawLimit = 500;
         let userReferralsCount = 0;
-        let botUsername = "";
+        let defaultBotUsername = "YourBotName_bot"; // আপনার আসল বট ইউজারনেম এখানে দিন
 
         window.onload = function() {
             document.getElementById('u-name').innerText = currentUser.first_name;
@@ -570,7 +565,7 @@
 
             const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
 
-            // Generate Referral Link with Fallback Logic for Bot Username
+            // Dynamic Referral Link Generator Logic (Python & PHP Compatible)
             generateReferralLink();
 
             syncUserData(startParam);
@@ -579,18 +574,27 @@
             loadWithdrawHistory();
         };
 
+        // --- PROFESIONAL REFERRAL LINK GENERATOR ---
         function generateReferralLink() {
-            // Attempt 1: Fetch username directly from Telegram WebApp SDK
-            if (tg.initDataUnsafe && tg.initDataUnsafe.bot && tg.initDataUnsafe.bot.username) {
+            let botUsername = "";
+
+            // URL থেকে বট ইউজারনেম চেক করা
+            const urlBot = getUrlParameter('bot');
+            
+            if (urlBot) {
+                botUsername = urlBot.replace('@', '');
+                updateRefLinkUI(botUsername);
+            } else if (tg.initDataUnsafe && tg.initDataUnsafe.bot && tg.initDataUnsafe.bot.username) {
+                // Telegram WebApp SDK থেকে ফেচ
                 botUsername = tg.initDataUnsafe.bot.username;
                 updateRefLinkUI(botUsername);
             } else {
-                // Attempt 2: Fetch bot username from Database setting fallback
+                // ডাটাবেজ/ডিফল্ট কনফিগারেশন থেকে ইউজারনেম নেওয়া
                 db.ref('settings/botUsername').once('value', snapshot => {
                     if (snapshot.exists() && snapshot.val()) {
-                        botUsername = snapshot.val();
+                        botUsername = snapshot.val().replace('@', '');
                     } else {
-                        botUsername = "YourBotName_bot"; // Default fallback if not set
+                        botUsername = defaultBotUsername;
                     }
                     updateRefLinkUI(botUsername);
                 });
@@ -598,7 +602,10 @@
         }
 
         function updateRefLinkUI(botName) {
-            document.getElementById('ref-link').value = `https://t.me/${botName}?start=${currentUser.id}`;
+            const cleanBotName = botName.trim().replace(/^@/, '');
+            // PHP logic style: $referLink = Bot::getBotLink() . '?start=' . $chat_id;
+            const referLink = `https://t.me/${cleanBotName}?start=${currentUser.id}`;
+            document.getElementById('ref-link').value = referLink;
         }
 
         function openNoticeModal() {
@@ -634,12 +641,11 @@
 
                     userRef.set(userData);
 
-                    // Instant Referral Reward to Referrer
                     if (userData.referredBy) {
                         db.ref('users/' + userData.referredBy).transaction(user => {
                             if (user) {
                                 user.referralsCount = (user.referralsCount || 0) + 1;
-                                user.referralCommission = (user.referralCommission || 0) + 20; // 20 Tk commission
+                                user.referralCommission = (user.referralCommission || 0) + 20;
                                 user.balance = (user.balance || 0) + 20;
                             }
                             return user;
@@ -775,8 +781,13 @@
         function copyReferralLink() {
             const copyText = document.getElementById("ref-link");
             copyText.select();
-            document.execCommand("copy");
-            alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
+            }).catch(() => {
+                document.execCommand("copy");
+                alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
+            });
         }
 
         function requestWithdraw() {
