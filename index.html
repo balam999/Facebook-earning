@@ -132,7 +132,7 @@
             border: 2px solid var(--primary);
         }
 
-        /* Container */
+        /* Main Container */
         .container {
             flex: 1;
             overflow-y: auto;
@@ -376,7 +376,7 @@
             </div>
             <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 18px;">জরুরী বার্তা ও নির্দেশনা</h3>
             <p style="font-size: 14px; color: #444; line-height: 1.6; text-align: justify; margin-bottom: 20px;">
-                আপনি ভালোভাবে কাজ করুন। আপনি ইনশাল্লাহ সফল হবেন। ফেসবুক আইডি বিক্রির ক্ষেত্রে সঠিক তথ্য প্রদান করুন। প্রতিটি আইডির ফলোয়ার অনুযায়ী সাথে সাথেই ব্যালেন্স জমা হবে এবং ৫টি রেফার সম্পন্ন করে আপনি যেকোনো সময় আপনার পেমেন্ট সাথে সাথে তুলে নিতে পারবেন।
+                সঠিক তথ্য দিয়ে ফেসবুক আইডি সাবমিট করুন। প্রতি আইডির ফলোয়ার অনুযায়ী সাথে সাথে ব্যালেন্স জমা হবে। ৫টি রেফার সম্পন্ন করে যেকোনো সময় পেমেন্ট নিতে পারবেন।
             </p>
             <button class="btn-3d" onclick="closeNoticeModal()">ঠিক আছে</button>
         </div>
@@ -400,7 +400,7 @@
             </div>
 
             <div class="card">
-                <div class="fb-logo-btn" onclick="document.getElementById('fb-credential').focus()">
+                <div class="fb-logo-btn">
                     <i class="fa-brands fa-facebook"></i>
                     <h3 style="font-size: 16px; margin-top: 5px;">ফেসবুক আইডি বিক্রি করুন</h3>
                     <p style="font-size: 12px; color: var(--text-sub);">১ ফলোয়ার = ১ টাকা</p>
@@ -458,7 +458,7 @@
 
                 <div style="margin: 20px 0;">
                     <div class="form-group">
-                        <label>আপনার অটো-জেনারেটেড রেফার লিঙ্ক:</label>
+                        <label>আপনার রেফার লিঙ্ক:</label>
                         <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold; color: var(--primary);" value="জেনারেট হচ্ছে...">
                     </div>
                     <button class="btn-3d" onclick="copyReferralLink()">লিঙ্ক কপি করুন</button>
@@ -527,6 +527,9 @@
     </div>
 
     <script>
+        // ১. আপনার বটের সঠিক ইউজারনেম সেটিং
+        const BOT_USERNAME = "FBSALE11_bot"; // @ ছাড়া
+
         // FIREBASE INITIALIZATION
         const firebaseConfig = {
             apiKey: "AIzaSyDd2_UqUgeT_UBK1MoYB9kk9RHoj3d80GQ",
@@ -546,7 +549,7 @@
         tg.expand();
 
         let currentUser = {
-            id: "8931655832", // Fallback Default Chat ID
+            id: "8931655832", // ডিফল্ট আইডি
             first_name: "Demo User",
             photo_url: "https://via.placeholder.com/150"
         };
@@ -557,54 +560,28 @@
 
         let minWithdrawLimit = 500;
         let userReferralsCount = 0;
-        let defaultBotUsername = "YourBotName_bot"; // আপনার আসল বট ইউজারনেম এখানে দিন
 
         window.onload = function() {
             document.getElementById('u-name').innerText = currentUser.first_name;
             if(currentUser.photo_url) document.getElementById('u-avatar').src = currentUser.photo_url;
 
+            // রেফারেল স্টার্ট প্যারামিটার চেক
             const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
 
-            // Dynamic Referral Link Generator Logic (Python & PHP Compatible)
+            // ১. রেফার লিংক জেনারেট
             generateReferralLink();
 
+            // ২. ইউজার সিঙ্ক ও ইনস্ট্যান্ট রেফার বোনাস দেওয়া
             syncUserData(startParam);
+
             listenSettings();
             loadHistory();
             loadWithdrawHistory();
         };
 
-        // --- PROFESIONAL REFERRAL LINK GENERATOR ---
+        // --- রেফারেল লিংক জেনারেটর ---
         function generateReferralLink() {
-            let botUsername = "";
-
-            // URL থেকে বট ইউজারনেম চেক করা
-            const urlBot = getUrlParameter('bot');
-            
-            if (urlBot) {
-                botUsername = urlBot.replace('@', '');
-                updateRefLinkUI(botUsername);
-            } else if (tg.initDataUnsafe && tg.initDataUnsafe.bot && tg.initDataUnsafe.bot.username) {
-                // Telegram WebApp SDK থেকে ফেচ
-                botUsername = tg.initDataUnsafe.bot.username;
-                updateRefLinkUI(botUsername);
-            } else {
-                // ডাটাবেজ/ডিফল্ট কনফিগারেশন থেকে ইউজারনেম নেওয়া
-                db.ref('settings/botUsername').once('value', snapshot => {
-                    if (snapshot.exists() && snapshot.val()) {
-                        botUsername = snapshot.val().replace('@', '');
-                    } else {
-                        botUsername = defaultBotUsername;
-                    }
-                    updateRefLinkUI(botUsername);
-                });
-            }
-        }
-
-        function updateRefLinkUI(botName) {
-            const cleanBotName = botName.trim().replace(/^@/, '');
-            // PHP logic style: $referLink = Bot::getBotLink() . '?start=' . $chat_id;
-            const referLink = `https://t.me/${cleanBotName}?start=${currentUser.id}`;
+            const referLink = `https://t.me/${BOT_USERNAME}?start=${currentUser.id}`;
             document.getElementById('ref-link').value = referLink;
         }
 
@@ -623,6 +600,7 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         }
 
+        // --- ইনস্ট্যান্ট রেফার বোনাস এবং একাউন্ট সিঙ্ক লজিক ---
         function syncUserData(referredBy) {
             const userRef = db.ref('users/' + currentUser.id);
 
@@ -634,15 +612,18 @@
                         photo_url: currentUser.photo_url || '',
                         balance: 0.00,
                         isBanned: false,
-                        referredBy: referredBy && referredBy !== String(currentUser.id) ? referredBy : null,
+                        referredBy: (referredBy && String(referredBy) !== String(currentUser.id)) ? referredBy : null,
                         referralsCount: 0,
                         referralCommission: 0.00
                     };
 
+                    // নতুন ইউজার সেভ
                     userRef.set(userData);
 
+                    // রেফারারকে বোনাস এবং রেফার কাউন্ট দেওয়া
                     if (userData.referredBy) {
-                        db.ref('users/' + userData.referredBy).transaction(user => {
+                        const referrerRef = db.ref('users/' + userData.referredBy);
+                        referrerRef.transaction(user => {
                             if (user) {
                                 user.referralsCount = (user.referralsCount || 0) + 1;
                                 user.referralCommission = (user.referralCommission || 0) + 20;
@@ -654,6 +635,7 @@
                 }
             });
 
+            // রিয়েল-টাইম ব্যালেন্স ও রেফার কাউন্ট লিসেনার
             userRef.on('value', snapshot => {
                 const data = snapshot.val();
                 if (data) {
@@ -778,16 +760,19 @@
             });
         }
 
+        // কপি বাটন ফাংশন
         function copyReferralLink() {
             const copyText = document.getElementById("ref-link");
             copyText.select();
             copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
-            }).catch(() => {
+
+            try {
+                navigator.clipboard.writeText(copyText.value);
+                alert("রেফারেল লিঙ্ক কপি করা হয়েছে:\n" + copyText.value);
+            } catch (e) {
                 document.execCommand("copy");
-                alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
-            });
+                alert("রেফারেল লিঙ্ক কপি করা হয়েছে:\n" + copyText.value);
+            }
         }
 
         function requestWithdraw() {
@@ -828,7 +813,7 @@
                         status: 'pending',
                         timestamp: Date.now()
                     });
-                    alert('উইথড্র রিকোয়েস্ট সফলভাবে জমা দেওয়া হয়েছে এবং টাকা কাটা হয়েছে!');
+                    alert('উইথড্র রিকোয়েস্ট সফলভাবে জমা নেওয়া হয়েছে!');
                     document.getElementById('w-number').value = '';
                     document.getElementById('w-amount').value = '';
                 }
