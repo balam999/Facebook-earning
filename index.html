@@ -32,7 +32,7 @@
             padding: 0;
             font-family: 'Roboto', sans-serif;
             -webkit-tap-highlight-color: transparent;
-            /* Prevent unwanted text selection on click */
+            /* Unwanted selection blocked */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -55,7 +55,7 @@
         .header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: #fff;
-            padding: 16px 20px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -69,8 +69,8 @@
         }
 
         .user-avatar {
-            width: 46px;
-            height: 46px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             border: 2px solid #fff;
             object-fit: cover;
@@ -79,7 +79,7 @@
 
         .user-info .name {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .status-badge {
@@ -94,18 +94,51 @@
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             background-color: #00FF66;
             border-radius: 50%;
             box-shadow: 0 0 8px #00FF66;
+        }
+
+        /* Notice Bell Icon Button on top right */
+        .notice-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .notice-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .notice-badge-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 9px;
+            height: 9px;
+            background-color: #FF3B30;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
         }
 
         /* Container */
         .container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 18px;
             padding-bottom: 90px;
         }
 
@@ -254,6 +287,43 @@
             background: linear-gradient(180deg, #1060C8 0%, #083C7D 100%);
         }
 
+        /* Modal Overlay for Notice Popup */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: #E7F3FF;
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 15px auto;
+        }
+
         /* Banned Screen */
         #banned-screen {
             display: none;
@@ -294,6 +364,26 @@
                     <span class="status-dot"></span> Active
                 </div>
             </div>
+        </div>
+
+        <!-- Top Right Notice Bell Icon Button -->
+        <button class="notice-btn" onclick="openNoticeModal()" title="Notice">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notice-badge-dot"></span>
+        </button>
+    </div>
+
+    <!-- Notice Modal Popup -->
+    <div id="notice-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon">
+                <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 18px;">জরুরী বার্তা ও নির্দেশনা</h3>
+            <p style="font-size: 14px; color: #444; line-height: 1.6; text-align: justify; margin-bottom: 20px;">
+                আপনি ভালোভাবে কাজ করুন। আপনি ইনশাল্লাহ সফল হবেন। ফেসবুক আইডি বিক্রির ক্ষেত্রে সঠিক তথ্য প্রদান করুন। প্রতিটি আইডির ফলোয়ার অনুযায়ী সাথে সাথেই ব্যালেন্স জমা হবে এবং ৫টি রেফার সম্পন্ন করে আপনি যেকোনো সময় আপনার পেমেন্ট সাথে সাথে তুলে নিতে পারবেন।
+            </p>
+            <button class="btn-3d" onclick="closeNoticeModal()">ঠিক আছে</button>
         </div>
     </div>
 
@@ -374,7 +464,7 @@
                 <div style="margin: 20px 0;">
                     <div class="form-group">
                         <label>আপনার অটো-জেনারেটেড রেফার লিঙ্ক:</label>
-                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold;">
+                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold;" value="জেনারেট হচ্ছে...">
                     </div>
                     <button class="btn-3d" onclick="copyReferralLink()">লিঙ্ক কপি করুন</button>
                 </div>
@@ -461,7 +551,7 @@
         tg.expand();
 
         let currentUser = {
-            id: "12345678", // Default fallback
+            id: "12345678", // Fallback Default ID
             first_name: "Demo User",
             photo_url: "https://via.placeholder.com/150"
         };
@@ -472,29 +562,52 @@
 
         let minWithdrawLimit = 500;
         let userReferralsCount = 0;
+        let botUsername = "";
 
         window.onload = function() {
             document.getElementById('u-name').innerText = currentUser.first_name;
             if(currentUser.photo_url) document.getElementById('u-avatar').src = currentUser.photo_url;
 
-            // Auto Detect Bot Username Dynamically
-            let botUsername = "Bot";
-            if (tg.initDataUnsafe && tg.initDataUnsafe.bot) {
-                botUsername = tg.initDataUnsafe.bot.username;
-            } else if (window.TelegramGameProxy && window.TelegramGameProxy.receiveEvent) {
-                // Alternative detection
-            }
-
             const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
 
-            // Generate Refer Link dynamically
-            document.getElementById('ref-link').value = `https://t.me/${botUsername}?start=${currentUser.id}`;
+            // Generate Referral Link with Fallback Logic for Bot Username
+            generateReferralLink();
 
             syncUserData(startParam);
             listenSettings();
             loadHistory();
             loadWithdrawHistory();
         };
+
+        function generateReferralLink() {
+            // Attempt 1: Fetch username directly from Telegram WebApp SDK
+            if (tg.initDataUnsafe && tg.initDataUnsafe.bot && tg.initDataUnsafe.bot.username) {
+                botUsername = tg.initDataUnsafe.bot.username;
+                updateRefLinkUI(botUsername);
+            } else {
+                // Attempt 2: Fetch bot username from Database setting fallback
+                db.ref('settings/botUsername').once('value', snapshot => {
+                    if (snapshot.exists() && snapshot.val()) {
+                        botUsername = snapshot.val();
+                    } else {
+                        botUsername = "YourBotName_bot"; // Default fallback if not set
+                    }
+                    updateRefLinkUI(botUsername);
+                });
+            }
+        }
+
+        function updateRefLinkUI(botName) {
+            document.getElementById('ref-link').value = `https://t.me/${botName}?start=${currentUser.id}`;
+        }
+
+        function openNoticeModal() {
+            document.getElementById('notice-modal').style.display = 'flex';
+        }
+
+        function closeNoticeModal() {
+            document.getElementById('notice-modal').style.display = 'none';
+        }
 
         function getUrlParameter(name) {
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -521,13 +634,13 @@
 
                     userRef.set(userData);
 
-                    // Instant 20 Tk Commission to Referrer
+                    // Instant Referral Reward to Referrer
                     if (userData.referredBy) {
                         db.ref('users/' + userData.referredBy).transaction(user => {
                             if (user) {
                                 user.referralsCount = (user.referralsCount || 0) + 1;
                                 user.referralCommission = (user.referralCommission || 0) + 20; // 20 Tk commission
-                                user.balance = (user.balance || 0) + 20; // Added instantly
+                                user.balance = (user.balance || 0) + 20;
                             }
                             return user;
                         });
@@ -692,7 +805,6 @@
                 if(currentBalance < amount) {
                     alert('আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নেই!');
                 } else {
-                    // Instant Balance Deduct
                     userRef.set(currentBalance - amount);
 
                     db.ref('withdrawals').push({
