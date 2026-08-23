@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Facebook Earn - User Panel</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #1877F2;
+            --primary-dark: #0d5cb9;
+            --bg-color: #F0F2F5;
+            --surface: #FFFFFF;
+            --text-main: #050505;
+            --text-sub: #65676B;
+            --danger: #E41E3F;
+            --success: #31A24C;
+            --warning: #F57C00;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            /* Prevent unwanted text selection on click */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        input, textarea, select {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Bar Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            object-fit: cover;
+            background: #fff;
+        }
+
+        .user-info .name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 3px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #00FF66;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00FF66;
+        }
+
+        /* Container */
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 90px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(24, 119, 242, 0.12);
+            margin-bottom: 16px;
+            border: 1px solid rgba(24, 119, 242, 0.08);
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #ffffff, #eef5ff);
+            border-left: 5px solid var(--primary);
+            text-align: center;
+        }
+
+        .balance-title {
+            font-size: 13px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
+
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--primary);
+            margin: 8px 0;
+        }
+
+        .fb-logo-btn {
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .fb-logo-btn i {
+            font-size: 55px;
+            color: var(--primary);
+            transition: transform 0.2s;
+        }
+
+        .fb-logo-btn i:hover {
+            transform: scale(1.08);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E4E6EB;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            background: #F8F9FA;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            background: #FFF;
+        }
+
+        /* 3D Button Style */
+        .btn-3d {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+            background: linear-gradient(180deg, #1877F2 0%, #0D5CB9 100%);
+            box-shadow: 0 5px 0 #083c7d, 0 8px 15px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-align: center;
+            position: relative;
+            top: 0;
+        }
+
+        .btn-3d:active {
+            top: 3px;
+            box-shadow: 0 2px 0 #083c7d, 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        /* Bottom Fixed Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 10px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            border-top: 1px solid #E4E6EB;
+            gap: 10px;
+        }
+
+        .nav-btn-3d {
+            flex: 1;
+            padding: 14px 4px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 13px;
+            color: #FFFFFF;
+            background: linear-gradient(180deg, #2A85FF 0%, #1060C8 100%);
+            box-shadow: 0 4px 0 #0B418C;
+            cursor: pointer;
+            text-transform: uppercase;
+            text-align: center;
+            transition: all 0.1s;
+        }
+
+        .nav-btn-3d:active, .nav-btn-3d.active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #0B418C;
+            background: linear-gradient(180deg, #1060C8 0%, #083C7D 100%);
+        }
+
+        /* Banned Screen */
+        #banned-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #fff;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* History Table Badge */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+        }
+        .badge-pending { background-color: var(--warning); }
+        .badge-approved { background-color: var(--success); }
+        .badge-rejected { background-color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <div class="header">
+        <div class="user-profile">
+            <img src="https://via.placeholder.com/150" alt="Profile" class="user-avatar" id="u-avatar">
+            <div class="user-info">
+                <div class="name" id="u-name">Loading...</div>
+                <div class="status-badge">
+                    <span class="status-dot"></span> Active
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banned Screen -->
+    <div id="banned-screen">
+        <i class="fa-solid fa-ban" style="font-size: 64px; color: var(--danger);"></i>
+        <h2 style="margin-top: 15px; color: var(--danger);">আপনার অ্যাকাউন্টটি ব্যান করা হয়েছে!</h2>
+        <p style="color: var(--text-sub); margin-top: 10px;">সহায়তার জন্য এডমিনের সাথে যোগাযোগ করুন।</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <!-- Tab 1: Facebook Earn -->
+        <div id="tab-earn" class="tab-content active">
+            <div class="card balance-card">
+                <div class="balance-title">বর্তমান ব্যালেন্স</div>
+                <div class="balance-amount">৳ <span id="user-balance">0.00</span></div>
+            </div>
+
+            <div class="card">
+                <div class="fb-logo-btn" onclick="document.getElementById('fb-credential').focus()">
+                    <i class="fa-brands fa-facebook"></i>
+                    <h3 style="font-size: 16px; margin-top: 5px;">ফেসবুক আইডি বিক্রি করুন</h3>
+                    <p style="font-size: 12px; color: var(--text-sub);">১ ফলোয়ার = ১ টাকা</p>
+                </div>
+
+                <div class="form-group">
+                    <label>১. মোবাইল নম্বর / ইমেইল</label>
+                    <input type="text" id="fb-credential" class="form-control" placeholder="017xxxxxxxx বা email@gmail.com">
+                </div>
+
+                <div class="form-group">
+                    <label>২. ফেসবুক আইডির নাম</label>
+                    <input type="text" id="fb-name" class="form-control" placeholder="যেমন: Rahat Ahmed">
+                </div>
+
+                <div class="form-group">
+                    <label>৩. ফেসবুক আইডির পাসওয়ার্ড</label>
+                    <input type="password" id="fb-pass" class="form-control" placeholder="আইডির পাসওয়ার্ড দিন">
+                </div>
+
+                <div class="form-group">
+                    <label>৪. ফেসবুক আইডির লিঙ্ক</label>
+                    <input type="text" id="fb-link" class="form-control" placeholder="https://facebook.com/your.profile">
+                </div>
+
+                <div class="form-group">
+                    <label>৫. ফলোয়ার সংখ্যা</label>
+                    <input type="number" id="fb-followers" class="form-control" placeholder="যেমন: 100" oninput="calculateEarning()">
+                </div>
+
+                <div style="background: #E7F3FF; padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+                    <p style="font-size: 13px; color: var(--primary-dark); font-weight: bold;">
+                        সম্ভাব্য আয়: ৳ <span id="estimated-earn">0</span>
+                    </p>
+                </div>
+
+                <button class="btn-3d" onclick="submitFacebookSell()">সাবমিট রিকোয়েস্ট</button>
+            </div>
+
+            <!-- ID Submission History -->
+            <div class="card">
+                <h4 style="margin-bottom: 10px; font-size: 14px; color: var(--text-sub);">আইডি সাবমিট হিস্টরি</h4>
+                <div id="history-list">
+                    <p style="font-size: 12px; color: #999;">কোন হিস্টরি পাওয়া যায়নি</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Refer -->
+        <div id="tab-refer" class="tab-content">
+            <div class="card" style="text-align: center;">
+                <i class="fa-solid fa-users" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+                <h3>রেফার করে ইনকাম করুন</h3>
+                <p style="font-size: 13px; color: var(--text-sub); margin-top: 5px;">বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে ২০ টাকা কমিশন পান!</p>
+
+                <div style="margin: 20px 0;">
+                    <div class="form-group">
+                        <label>আপনার অটো-জেনারেটেড রেফার লিঙ্ক:</label>
+                        <input type="text" id="ref-link" class="form-control" readonly style="text-align: center; font-weight: bold;">
+                    </div>
+                    <button class="btn-3d" onclick="copyReferralLink()">লিঙ্ক কপি করুন</button>
+                </div>
+
+                <div style="display: flex; justify-content: space-around; border-top: 1px solid #eee; padding-top: 15px;">
+                    <div>
+                        <small style="color: var(--text-sub);">মোট রেফার</small>
+                        <h4 id="total-ref-count">0 / 5</h4>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-sub);">রেফার কমিশন</small>
+                        <h4 id="total-ref-earnings">৳ 0.00</h4>
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: var(--danger); margin-top: 10px;">* উইথড্র করতে কমপক্ষে ৫টি রেফার সম্পন্ন করতে হবে।</p>
+            </div>
+        </div>
+
+        <!-- Tab 3: Withdraw -->
+        <div id="tab-withdraw" class="tab-content">
+            <div class="card">
+                <h3>টাকা উইথড্র করুন</h3>
+                <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 15px;">
+                    সর্বনিম্ন উইথড্র লিমিট: <b>৳ <span id="min-withdraw-label">500</span></b>
+                </p>
+
+                <div class="form-group">
+                    <label>পেমেন্ট মেথড</label>
+                    <select id="w-method" class="form-control">
+                        <option value="bKash">বিকাশ (bKash)</option>
+                        <option value="Nagad">নগদ (Nagad)</option>
+                        <option value="Rocket">রকেট (Rocket)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>একাউন্ট নম্বর</label>
+                    <input type="number" id="w-number" class="form-control" placeholder="017xxxxxxxx">
+                </div>
+
+                <div class="form-group">
+                    <label>উইথড্র পরিমাণ (৳)</label>
+                    <input type="number" id="w-amount" class="form-control" placeholder="পরিমাণ লিখুন">
+                </div>
+
+                <button class="btn-3d" onclick="requestWithdraw()">উইথড্র রিকুয়েস্ট পাঠান</button>
+            </div>
+
+            <!-- Withdraw History -->
+            <div class="card">
+                <h4 style="margin-bottom: 10px; font-size: 14px; color: var(--text-sub);">উইথড্রয়াল হিস্টরি</h4>
+                <div id="withdraw-history-list">
+                    <p style="font-size: 12px; color: #999;">কোন উইথড্র হিস্টরি পাওয়া যায়নি</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-nav">
+        <button class="nav-btn-3d active" onclick="switchTab('earn', this)">ফেসবুক আর্ন</button>
+        <button class="nav-btn-3d" onclick="switchTab('refer', this)">রেফার</button>
+        <button class="nav-btn-3d" onclick="switchTab('withdraw', this)">উইথড্র</button>
+    </div>
+
+    <script>
+        // FIREBASE INITIALIZATION
+        const firebaseConfig = {
+            apiKey: "AIzaSyDd2_UqUgeT_UBK1MoYB9kk9RHoj3d80GQ",
+            authDomain: "message-patal.firebaseapp.com",
+            databaseURL: "https://message-patal-default-rtdb.firebaseio.com",
+            projectId: "message-patal",
+            storageBucket: "message-patal.firebasestorage.app",
+            messagingSenderId: "419002900103",
+            appId: "1:419002900103:web:cda4edf8d7fb7230d4e222",
+            measurementId: "G-ZY08G0K1J5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Telegram WebApp Setup
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let currentUser = {
+            id: "12345678", // Default fallback
+            first_name: "Demo User",
+            photo_url: "https://via.placeholder.com/150"
+        };
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            currentUser = tg.initDataUnsafe.user;
+        }
+
+        let minWithdrawLimit = 500;
+        let userReferralsCount = 0;
+
+        window.onload = function() {
+            document.getElementById('u-name').innerText = currentUser.first_name;
+            if(currentUser.photo_url) document.getElementById('u-avatar').src = currentUser.photo_url;
+
+            // Auto Detect Bot Username Dynamically
+            let botUsername = "Bot";
+            if (tg.initDataUnsafe && tg.initDataUnsafe.bot) {
+                botUsername = tg.initDataUnsafe.bot.username;
+            } else if (window.TelegramGameProxy && window.TelegramGameProxy.receiveEvent) {
+                // Alternative detection
+            }
+
+            const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
+
+            // Generate Refer Link dynamically
+            document.getElementById('ref-link').value = `https://t.me/${botUsername}?start=${currentUser.id}`;
+
+            syncUserData(startParam);
+            listenSettings();
+            loadHistory();
+            loadWithdrawHistory();
+        };
+
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        function syncUserData(referredBy) {
+            const userRef = db.ref('users/' + currentUser.id);
+
+            userRef.once('value', snapshot => {
+                if (!snapshot.exists()) {
+                    let userData = {
+                        id: currentUser.id,
+                        name: currentUser.first_name,
+                        photo_url: currentUser.photo_url || '',
+                        balance: 0.00,
+                        isBanned: false,
+                        referredBy: referredBy && referredBy !== String(currentUser.id) ? referredBy : null,
+                        referralsCount: 0,
+                        referralCommission: 0.00
+                    };
+
+                    userRef.set(userData);
+
+                    // Instant 20 Tk Commission to Referrer
+                    if (userData.referredBy) {
+                        db.ref('users/' + userData.referredBy).transaction(user => {
+                            if (user) {
+                                user.referralsCount = (user.referralsCount || 0) + 1;
+                                user.referralCommission = (user.referralCommission || 0) + 20; // 20 Tk commission
+                                user.balance = (user.balance || 0) + 20; // Added instantly
+                            }
+                            return user;
+                        });
+                    }
+                }
+            });
+
+            userRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    document.getElementById('user-balance').innerText = (data.balance || 0).toFixed(2);
+                    userReferralsCount = data.referralsCount || 0;
+                    document.getElementById('total-ref-count').innerText = `${userReferralsCount} / 5`;
+                    document.getElementById('total-ref-earnings').innerText = `৳ ${(data.referralCommission || 0).toFixed(2)}`;
+                    document.getElementById('banned-screen').style.display = data.isBanned ? 'flex' : 'none';
+                }
+            });
+        }
+
+        function listenSettings() {
+            db.ref('settings/minWithdraw').on('value', snapshot => {
+                if(snapshot.exists()) {
+                    minWithdrawLimit = snapshot.val();
+                    document.getElementById('min-withdraw-label').innerText = minWithdrawLimit;
+                }
+            });
+        }
+
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn-3d').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
+        }
+
+        function calculateEarning() {
+            const followers = document.getElementById('fb-followers').value;
+            document.getElementById('estimated-earn').innerText = followers ? parseInt(followers) : 0;
+        }
+
+        function submitFacebookSell() {
+            const credential = document.getElementById('fb-credential').value;
+            const name = document.getElementById('fb-name').value;
+            const pass = document.getElementById('fb-pass').value;
+            const link = document.getElementById('fb-link').value;
+            const followers = parseInt(document.getElementById('fb-followers').value);
+
+            if(!credential || !name || !pass || !link || !followers || followers <= 0) {
+                alert('অনুগ্রহ করে সমস্ত সঠিক তথ্য পূরণ করুন!');
+                return;
+            }
+
+            db.ref('id_sales').push({
+                userId: currentUser.id,
+                userName: currentUser.first_name,
+                userPhoto: currentUser.photo_url || '',
+                credential: credential,
+                fbName: name,
+                fbPass: pass,
+                fbLink: link,
+                followers: followers,
+                amount: followers,
+                status: 'pending',
+                timestamp: Date.now()
+            });
+
+            alert('রিকোয়েস্ট সফলভাবে জমা নেওয়া হয়েছে! এডমিন যাচাই করে এপ্রুভ করলে ব্যালেন্সে টাকা যোগ হবে।');
+            document.getElementById('fb-credential').value = '';
+            document.getElementById('fb-name').value = '';
+            document.getElementById('fb-pass').value = '';
+            document.getElementById('fb-link').value = '';
+            document.getElementById('fb-followers').value = '';
+            document.getElementById('estimated-earn').innerText = '0';
+        }
+
+        function loadHistory() {
+            db.ref('id_sales').orderByChild('userId').equalTo(currentUser.id).on('value', snapshot => {
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                if(!snapshot.exists()) {
+                    list.innerHTML = '<p style="font-size: 12px; color: #999;">কোন হিস্টরি পাওয়া যায়নি</p>';
+                    return;
+                }
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    let badgeClass = data.status === 'approved' ? 'badge-approved' : (data.status === 'rejected' ? 'badge-rejected' : 'badge-pending');
+                    let statusText = data.status === 'approved' ? 'এপ্রুভড (৳' + data.amount + ')' : (data.status === 'rejected' ? 'বাতিল' : 'পেন্ডিং');
+
+                    list.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding: 8px 0; font-size:13px;">
+                            <div>
+                                <b>${data.fbName}</b> (${data.followers} ফলোয়ার)
+                            </div>
+                            <div>
+                                <span class="badge ${badgeClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    ` + list.innerHTML;
+                });
+            });
+        }
+
+        function loadWithdrawHistory() {
+            db.ref('withdrawals').orderByChild('userId').equalTo(currentUser.id).on('value', snapshot => {
+                const list = document.getElementById('withdraw-history-list');
+                list.innerHTML = '';
+                if(!snapshot.exists()) {
+                    list.innerHTML = '<p style="font-size: 12px; color: #999;">কোন উইথড্র হিস্টরি পাওয়া যায়নি</p>';
+                    return;
+                }
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    let badgeClass = data.status === 'completed' ? 'badge-approved' : (data.status === 'rejected' ? 'badge-rejected' : 'badge-pending');
+                    let statusText = data.status === 'completed' ? 'এপ্রুভড' : (data.status === 'rejected' ? 'রিজেক্টেড (রিফান্ডেড)' : 'পেন্ডিং');
+
+                    list.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding: 8px 0; font-size:13px;">
+                            <div>
+                                <b>${data.method}</b> (${data.number})<br>
+                                <small style="color:#666;">৳ ${data.amount}</small>
+                            </div>
+                            <div>
+                                <span class="badge ${badgeClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    ` + list.innerHTML;
+                });
+            });
+        }
+
+        function copyReferralLink() {
+            const copyText = document.getElementById("ref-link");
+            copyText.select();
+            document.execCommand("copy");
+            alert("রেফারেল লিঙ্ক কপি করা হয়েছে!");
+        }
+
+        function requestWithdraw() {
+            const method = document.getElementById('w-method').value;
+            const number = document.getElementById('w-number').value;
+            const amount = parseFloat(document.getElementById('w-amount').value);
+
+            if(!number || !amount) {
+                alert('সকল তথ্য পূরণ করুন।');
+                return;
+            }
+
+            if(userReferralsCount < 5) {
+                alert(`উইথড্র করার জন্য আপনার অন্তত ৫টি রেফার প্রয়োজন! (বর্তমান রেফার: ${userReferralsCount}টি)`);
+                return;
+            }
+
+            if(amount < minWithdrawLimit) {
+                alert(`সর্বনিম্ন উইথড্র লিমিট ৳ ${minWithdrawLimit}`);
+                return;
+            }
+
+            const userRef = db.ref('users/' + currentUser.id + '/balance');
+            userRef.once('value', snapshot => {
+                const currentBalance = snapshot.val() || 0;
+                if(currentBalance < amount) {
+                    alert('আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নেই!');
+                } else {
+                    // Instant Balance Deduct
+                    userRef.set(currentBalance - amount);
+
+                    db.ref('withdrawals').push({
+                        userId: currentUser.id,
+                        userName: currentUser.first_name,
+                        userPhoto: currentUser.photo_url || '',
+                        method: method,
+                        number: number,
+                        amount: amount,
+                        status: 'pending',
+                        timestamp: Date.now()
+                    });
+                    alert('উইথড্র রিকোয়েস্ট সফলভাবে জমা দেওয়া হয়েছে এবং টাকা কাটা হয়েছে!');
+                    document.getElementById('w-number').value = '';
+                    document.getElementById('w-amount').value = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
