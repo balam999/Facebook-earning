@@ -114,6 +114,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            touch-action: manipulation;
         }
 
         .notice-btn:active {
@@ -225,7 +226,7 @@
             background: #FFF;
         }
 
-        /* 3D Button Style */
+        /* Fast Responsive 3D Button Style */
         .btn-3d {
             width: 100%;
             padding: 15px;
@@ -235,17 +236,16 @@
             font-weight: 700;
             color: #FFFFFF;
             background: linear-gradient(180deg, #1877F2 0%, #0D5CB9 100%);
-            box-shadow: 0 5px 0 #083c7d, 0 8px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 0 #083c7d;
             cursor: pointer;
-            transition: all 0.1s ease;
+            transition: background 0.1s ease;
             text-align: center;
-            position: relative;
-            top: 0;
+            touch-action: manipulation;
         }
 
         .btn-3d:active {
-            top: 3px;
-            box-shadow: 0 2px 0 #083c7d, 0 4px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 0 #083c7d;
+            background: linear-gradient(180deg, #0D5CB9 0%, #083C7D 100%);
         }
 
         /* Bottom Fixed Navigation Bar */
@@ -261,6 +261,7 @@
             box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
             border-top: 1px solid #E4E6EB;
             gap: 10px;
+            z-index: 99;
         }
 
         .nav-btn-3d {
@@ -276,12 +277,12 @@
             cursor: pointer;
             text-transform: uppercase;
             text-align: center;
-            transition: all 0.1s;
+            transition: background 0.1s ease;
+            touch-action: manipulation;
         }
 
         .nav-btn-3d:active, .nav-btn-3d.active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 #0B418C;
+            box-shadow: 0 2px 0 #0B418C;
             background: linear-gradient(180deg, #1060C8 0%, #083C7D 100%);
         }
 
@@ -480,7 +481,7 @@
             <div class="card" style="text-align: center;">
                 <i class="fa-solid fa-users" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
                 <h3>রেফার করে ইনকাম করুন</h3>
-                <p style="font-size: 13px; color: var(--text-sub); margin-top: 5px;">বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে ২০ টাকা কমিশন পান!</p>
+                <p style="font-size: 13px; color: var(--text-sub); margin-top: 5px;">বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে <b style="color:var(--primary);">৳ <span id="ref-bonus-label">20</span></b> কমিশন পান!</p>
 
                 <div style="margin: 20px 0;">
                     <div class="form-group">
@@ -545,7 +546,7 @@
 
     </div>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar (Ultra-fast Touch Response) -->
     <div class="bottom-nav">
         <button class="nav-btn-3d active" onclick="switchTab('earn', this)">ফেসবুক আর্ন</button>
         <button class="nav-btn-3d" onclick="switchTab('refer', this)">রেফার</button>
@@ -582,6 +583,7 @@
         }
 
         let minWithdrawLimit = 500;
+        let referBonusAmount = 20;
         let userReferralsCount = 0;
 
         window.onload = function() {
@@ -591,9 +593,9 @@
             const startParam = tg.initDataUnsafe.start_param || getUrlParameter('start');
 
             generateReferralLink();
+            listenSettings();
             syncUserData(startParam);
 
-            listenSettings();
             loadHistory();
             loadWithdrawHistory();
         };
@@ -666,8 +668,8 @@
                         referrerRef.transaction(user => {
                             if (user) {
                                 user.referralsCount = (user.referralsCount || 0) + 1;
-                                user.referralCommission = (user.referralCommission || 0) + 20;
-                                user.balance = (user.balance || 0) + 20;
+                                user.referralCommission = (user.referralCommission || 0) + referBonusAmount;
+                                user.balance = (user.balance || 0) + referBonusAmount;
                             }
                             return user;
                         });
@@ -688,10 +690,17 @@
         }
 
         function listenSettings() {
-            db.ref('settings/minWithdraw').on('value', snapshot => {
+            db.ref('settings').on('value', snapshot => {
                 if(snapshot.exists()) {
-                    minWithdrawLimit = snapshot.val();
-                    document.getElementById('min-withdraw-label').innerText = minWithdrawLimit;
+                    const data = snapshot.val();
+                    if(data.minWithdraw !== undefined) {
+                        minWithdrawLimit = data.minWithdraw;
+                        document.getElementById('min-withdraw-label').innerText = minWithdrawLimit;
+                    }
+                    if(data.referBonus !== undefined) {
+                        referBonusAmount = data.referBonus;
+                        document.getElementById('ref-bonus-label').innerText = referBonusAmount;
+                    }
                 }
             });
         }
