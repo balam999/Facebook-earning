@@ -391,7 +391,7 @@
             </div>
             <h3 style="color: var(--primary); margin-bottom: 10px; font-size: 18px;">জরুরী বার্তা ও নির্দেশনা</h3>
             <p style="font-size: 14px; color: #444; line-height: 1.6; text-align: justify; margin-bottom: 20px;">
-                সঠিক তথ্য দিয়ে ফেসবুক আইডি সাবমিট করুন। প্রতি আইডির ফলোয়ার অনুযায়ী সাথে সাথে ব্যালেন্স জমা হবে। ৫টি রেফার সম্পন্ন করে যেকোনো সময় পেমেন্ট নিতে পারবেন।
+                সঠিক তথ্য দিয়ে ফেসবুক আইডি সাবমিট করুন। প্রতি রেফারে পাবেন ১০০ টাকা কমিশন! ৫টি রেফার সম্পন্ন করে যেকোনো সময় পেমেন্ট নিতে পারবেন।
             </p>
             <button class="btn-3d" onclick="closeNoticeModal()">ঠিক আছে</button>
         </div>
@@ -481,7 +481,7 @@
             <div class="card" style="text-align: center;">
                 <i class="fa-solid fa-users" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
                 <h3>রেফার করে ইনকাম করুন</h3>
-                <p style="font-size: 13px; color: var(--text-sub); margin-top: 5px;">বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে <b style="color:var(--primary);">৳ <span id="ref-bonus-label">20</span></b> কমিশন পান!</p>
+                <p style="font-size: 13px; color: var(--text-sub); margin-top: 5px;">বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে পান <b style="color:var(--primary);">৳ 100</b> কমিশন!</p>
 
                 <div style="margin: 20px 0;">
                     <div class="form-group">
@@ -554,7 +554,7 @@
     </div>
 
     <script>
-        const BOT_USERNAME = "FBSALE11_bot";
+        const BOT_USERNAME = "FBSALE11_bot"; // আপনার টেলিগ্রাম বটের ইউজারনেম এখানে দিন
 
         const firebaseConfig = {
             apiKey: "AIzaSyDd2_UqUgeT_UBK1MoYB9kk9RHoj3d80GQ",
@@ -583,14 +583,14 @@
         }
 
         let minWithdrawLimit = 500;
-        let referBonusAmount = 20;
+        const FIXED_REFER_BONUS = 100; // প্রতি রেফারে ফিক্সড ১০০ টাকা
         let userReferralsCount = 0;
 
         window.onload = function() {
             document.getElementById('u-name').innerText = currentUser.first_name;
             if(currentUser.photo_url) document.getElementById('u-avatar').src = currentUser.photo_url;
 
-            // টেলিগ্রাম WebApp থেকে অথবা URL থেকে start_param সঠিকভাবে ধরার ব্যবস্থা
+            // টেলিগ্রাম WebApp বা URL থেকে start প্যারামিটার চেক করা
             const startParam = (tg.initDataUnsafe && tg.initDataUnsafe.start_param) || getUrlParameter('start');
 
             generateReferralLink();
@@ -666,14 +666,14 @@
 
                     userRef.set(userData);
 
-                    // যদি রেফারার আইডি থাকে, তবে সরাসরি একবারই কাউন্ট ও বোনাস যোগ হবে
+                    // রেফারার থাকলে তার একাউন্টে ১০০ টাকা যোগ এবং রেফার কাউন্ট আপডেট করা
                     if (validReferrer) {
                         const referrerRef = db.ref('users/' + validReferrer);
                         referrerRef.transaction(user => {
                             if (user) {
                                 user.referralsCount = (user.referralsCount || 0) + 1;
-                                user.referralCommission = (user.referralCommission || 0) + referBonusAmount;
-                                user.balance = (user.balance || 0) + referBonusAmount;
+                                user.referralCommission = (user.referralCommission || 0) + FIXED_REFER_BONUS;
+                                user.balance = (user.balance || 0) + FIXED_REFER_BONUS;
                             }
                             return user;
                         });
@@ -700,10 +700,6 @@
                     if(data.minWithdraw !== undefined) {
                         minWithdrawLimit = data.minWithdraw;
                         document.getElementById('min-withdraw-label').innerText = minWithdrawLimit;
-                    }
-                    if(data.referBonus !== undefined) {
-                        referBonusAmount = data.referBonus;
-                        document.getElementById('ref-bonus-label').innerText = referBonusAmount;
                     }
                 }
             });
